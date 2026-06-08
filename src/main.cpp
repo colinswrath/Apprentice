@@ -4,7 +4,7 @@
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-        Events::RaceSexMenuWatcher::Register();
+        Events::VanillaMenuWatcher::Register();
         ScaleformInjector::Register();
     }
 

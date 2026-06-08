@@ -3,7 +3,6 @@
 #include "interface.h"
 #include "jsonhandler.h"
 
-
 GetJSONData* getJSONData = nullptr;
 
 bool ScaleformInjector::InstallHooks(RE::GFxMovieView* a_view, RE::GFxValue*)

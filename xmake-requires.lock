@@ -59,5 +59,63 @@
             },
             version = "v1.15.3"
         }
+    },
+    ["windows|x86"] = {
+        ["cmake#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "3.31.0-rc2"
+        },
+        ["directxmath#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "2024.02"
+        },
+        ["directxtk#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "07042e61898a1f192c91bb61caf15738393fefe0",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "24.2.0"
+        },
+        ["ninja#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "1.12.1"
+        },
+        ["nlohmann_json#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "v3.12.0"
+        },
+        ["rapidcsv#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "v8.89"
+        },
+        ["spdlog#09c8c173"] = {
+            repo = {
+                branch = "master",
+                commit = "a01e26d1e2bfe72b2c91950f467ed3c0c844f5da",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "v1.15.3"
+        }
     }
 }
