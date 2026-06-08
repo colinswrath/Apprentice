@@ -9,7 +9,7 @@ json GetJSONData::LoadJSON(std::string filename)
 	std::ifstream file(filename);
 
 	if (!file.is_open()) {
-		logger::info("Failed to find {}", filename);
+		logger::info("Failed to finFd {}", filename);
 		return json::array();
 	}
 
