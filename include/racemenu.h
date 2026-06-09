@@ -1,99 +1,111 @@
-class OnItemPressHandler;
-class OnSelectionChangeHandler;
+/**
+ * Add RaceMenu support via DLL injection.
+ * Class/Trait tabs are added as new categories with an associated filterFlag that corresponds with new entries in the Race list
+ * Classes/Traits entries are added to the Race list with a filterFlag corresponding with the above category flag.
+ * This lets the system know that Category X with filterFlag Y should only show entries from the Race list with filterFlag Y.
+ */
+#pragma once
 
-constexpr int ENTRY_TYPE_CAT = 0;
-constexpr int ENTRY_TYPE_RACE = 1;
-constexpr int ENTRY_TYPE_SLIDER = 2;
-
-class RaceMenu: public Singleton<RaceMenu>
+namespace RaceMenuHandler
 {
-public:
-    RE::GFxValue raceSexPanelsInstance;
-	RE::GFxValue racePanel;
-	RE::GFxValue categoryList;
-	RE::GFxValue itemList;
+    class OnItemPressHandler;
+    class OnSelectionChangeHandler;
 
-	RE::GFxValue slidingCategoryList;
-	RE::GFxValue raceListEntryList;
-	RE::GFxValue categoryListEntryList;
+    constexpr int ENTRY_TYPE_CAT    = 0;
+    constexpr int ENTRY_TYPE_RACE   = 1;
+    constexpr int ENTRY_TYPE_SLIDER = 2;
 
-	RE::GPtr<RE::GFxMovieView> raceSexMovie;
-	RE::GPtr<OnItemPressHandler> onItemPressHandler = nullptr;
-    RE::GPtr<OnSelectionChangeHandler> onSelectionChangeHandler = nullptr;
+    class RaceMenu : public Singleton<RaceMenu>
+    {
+    public:
+        RE::GFxValue raceSexPanelsInstance;
+        RE::GFxValue racePanel;
+        RE::GFxValue categoryList;
+        RE::GFxValue itemList;
 
-    RE::GFxValue traitLabel;
-    RE::GFxValue traitValue;
-    RE::GFxValue classLabel;
-    RE::GFxValue classValue;
+        RE::GFxValue slidingCategoryList;
+        RE::GFxValue raceListEntryList;
+        RE::GFxValue categoryListEntryList;
 
-	i32 numNewCols = 2;
-	bool categoriesInjected = false;
-    bool uiElementsCreated  = false;
-			
-	bool Install();
+        RE::GPtr<RE::GFxMovieView>         raceSexMovie = nullptr;
+        RE::GPtr<OnItemPressHandler>       onItemPressHandler = nullptr;
+        RE::GPtr<OnSelectionChangeHandler> onSelectionChangeHandler = nullptr;
 
-	bool PopulateRaceList();
-	bool PopulateCategoryList();
+        RE::GFxValue traitLabel;
+        RE::GFxValue traitValue;
+        RE::GFxValue classLabel;
+        RE::GFxValue classValue;
 
-    bool ReplaceEntryPressHandler();
-    bool ReplaceSelectionChangeHandler();
-	
-	RE::GFxValue BuildCategoryEntry(RE::GFxValue* a_entry, i32 typeInt, i32 filterInt, std::string textString, i32 flagInt, i32 priorityInt);
-    RE::GFxValue BuildListEntry(RE::GFxValue* a_entry, int type, std::string text, int filterFlag, std::string raceDesc, int equipState, int raceID, std::string callbackName, bool isClass, bool isTrait);
-    bool         CreateClassTraitUIElements();
+        i32  numNewCols         = 2;
+        bool categoriesInjected = false;
+        bool uiElementsCreated  = false;
 
-private:
-};
+        bool Install();
 
-class OnItemPressHandler : public RE::GFxFunctionHandler
-{
-public:
-    RE::GFxValue raceSexPanelsInstance;
-    RE::GFxValue racePanel;
-    RE::GFxValue itemList;
-    RE::GFxValue itemListEntryList;
-    RE::GFxValue playerInfoMc;
-    RE::GFxValue raceDescriptionMovie;
-    RE::GFxValue raceDescriptionField;
+        bool PopulateRaceList();
+        bool PopulateCategoryList();
 
-    RE::GFxValue _onItemPress;
-    RE::GFxValue _updateBottomBar;
-    RE::GFxValue _requestUpdate;
-    RE::GFxValue loadingIcon;
-    bool         isInstalled = false;
+        bool ReplaceEntryPressHandler();
+        bool ReplaceSelectionChangeHandler();
 
-    RE::GFxValue traitValue;
-    RE::GFxValue classValue;
+        RE::GFxValue BuildCategoryEntry(RE::GFxValue* a_entry, i32 typeInt, i32 filterInt, std::string textString, i32 flagInt, i32 priorityInt);
+        RE::GFxValue BuildListEntry(RE::GFxValue* a_entry, int type, std::string text, int filterFlag, std::string raceDesc, int equipState, int raceID, std::string callbackName,
+                                    bool isClass, bool isTrait);
+        bool         CreateClassTraitUIElements();
 
-    // Track selected class and trait callbacks for mod events
-    std::string selectedClassCallback;
-    std::string selectedTraitCallback;
+    private:
+    };
 
-    bool         uiElementsCreated = false;
+    class OnItemPressHandler : public RE::GFxFunctionHandler
+    {
+    public:
+        RE::GFxValue raceSexPanelsInstance;
+        RE::GFxValue racePanel;
+        RE::GFxValue itemList;
+        RE::GFxValue itemListEntryList;
+        RE::GFxValue playerInfoMc;
+        RE::GFxValue raceDescriptionMovie;
+        RE::GFxValue raceDescriptionField;
 
-	OnItemPressHandler(const RE::GFxValue& a_orig) : _onItemPress(a_orig) {}
+        RE::GFxValue _onItemPress;
+        RE::GFxValue _updateBottomBar;
+        RE::GFxValue _requestUpdate;
+        RE::GFxValue loadingIcon;
+        bool         isInstalled = false;
 
-	void Install();
-	void Call(Params& a_params) override;
-    void SendClassTraitModEvents();
-    void UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText);
-};
+        RE::GFxValue traitValue;
+        RE::GFxValue classValue;
 
-class OnSelectionChangeHandler : public RE::GFxFunctionHandler
-{
-public:
-    RE::GFxValue raceSexPanelsInstance;
-    RE::GFxValue racePanel;
-    RE::GFxValue raceListEntryList;
-    RE::GFxValue raceDescription;
-    RE::GFxValue itemList;
+        // Track selected class and trait callbacks for mod events
+        std::string selectedClassCallback;
+        std::string selectedTraitCallback;
 
-    RE::GFxValue _showRaceDescription;
-    RE::GFxValue _onSelectionChange;
-    bool         isInstalled = false;
+        bool uiElementsCreated = false;
 
-    OnSelectionChangeHandler(const RE::GFxValue& a_orig) : _onSelectionChange(a_orig) {}
+        OnItemPressHandler(const RE::GFxValue& a_orig) : _onItemPress(a_orig) {}
 
-    void Install();
-    void Call(Params& a_params) override;
-};
+        void Install();
+        void Call(Params& a_params) override;
+        void SendClassTraitModEvents();
+        void UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText);
+    };
+
+    class OnSelectionChangeHandler : public RE::GFxFunctionHandler
+    {
+    public:
+        RE::GFxValue raceSexPanelsInstance;
+        RE::GFxValue racePanel;
+        RE::GFxValue raceListEntryList;
+        RE::GFxValue raceDescription;
+        RE::GFxValue itemList;
+
+        RE::GFxValue _showRaceDescription;
+        RE::GFxValue _onSelectionChange;
+        bool         isInstalled = false;
+
+        OnSelectionChangeHandler(const RE::GFxValue& a_orig) : _onSelectionChange(a_orig) {}
+
+        void Install();
+        void Call(Params& a_params) override;
+    };
+} // namespace RaceMenuHandler
