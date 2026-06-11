@@ -17,32 +17,43 @@ namespace RaceMenuHandler
         if (const auto ui{ RE::UI::GetSingleton() }) {
             logger::info("Get menu");
             if (auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
-                logger::info("Get movie");
                 if (auto a_movie{ menu->uiMovie }) {
-                    logger::info("Reset");
 
-                    onItemPressHandler       = nullptr;
-                    onSelectionChangeHandler = nullptr;
+                    if (raceSexMovie != nullptr && raceSexMovie != a_movie) {
+                        if (onItemPressHandler) {
+                            onItemPressHandler->Reset();
+                            onItemPressHandler = nullptr;
+                        }
+                        if (onSelectionChangeHandler) {
+                            onSelectionChangeHandler->Reset();
+                            onSelectionChangeHandler = nullptr;
+                        }
 
-                    logger::info("Get Movie");
+                        racePanel             = RE::GFxValue{};
+                        raceSexPanelsInstance = RE::GFxValue{};
+                        raceListEntryList     = RE::GFxValue{};
+                        categoryListEntryList = RE::GFxValue{};
+
+                        raceSexMovie       = nullptr;
+                        categoriesInjected = false;
+                        uiElementsCreated  = false;
+                    }
+                    //onItemPressHandler       = nullptr;
+                    //onSelectionChangeHandler = nullptr;
+                    
                     raceSexMovie = a_movie;
 
-                    logger::info("Get Vars");
+
                     raceSexMovie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
                     raceSexMovie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
                     raceSexMovie->GetVariable(&raceListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
                     raceSexMovie->GetVariable(&categoryListEntryList,
                                                 "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.slidingCategoryList.categoryList.entryList");
 
-                    logger::info("Cat List");
                     PopulateCategoryList();
-                    logger::info("Race List");
                     PopulateRaceList();
-                    logger::info("Press Handler");
                     ReplaceEntryPressHandler();
-                    logger::info("Select Handler");
                     ReplaceSelectionChangeHandler();
-                    logger::info("Create UI");
                     CreateClassTraitUIElements();
 
                     return true;
@@ -56,10 +67,10 @@ namespace RaceMenuHandler
     bool RaceMenu::PopulateRaceList()
     {
         const u32                        size = raceListEntryList.GetArraySize();
-        static JSONHandler::GetJSONData* getJSONData;
+        static JSONHandler::GetJSONData getJSONData;
 
-        auto      classEntryJSON = getJSONData->LoadJSON("Data/SKSE/Plugins/app_classes.json");
-        auto      traitEntryJSON = getJSONData->LoadJSON("Data/SKSE/Plugins/app_traits.json");
+        auto      classEntryJSON = getJSONData.LoadJSON("Data/SKSE/Plugins/app_classes.json");
+        auto      traitEntryJSON = getJSONData.LoadJSON("Data/SKSE/Plugins/app_traits.json");
         const u32 newSize        = size + classEntryJSON.size() + traitEntryJSON.size();
 
         // Expand RaceList by numClassSize + numTraitSize
@@ -511,6 +522,19 @@ namespace RaceMenuHandler
         }
     }
 
+    void OnItemPressHandler::Reset()
+    {
+        raceSexPanelsInstance = RE::GFxValue{};
+        itemListEntryList     = RE::GFxValue{};
+        racePanel             = RE::GFxValue{};
+        itemList              = RE::GFxValue{};
+        playerInfoMc          = RE::GFxValue{};
+        raceDescriptionMovie  = RE::GFxValue{};
+        traitValue            = RE::GFxValue{};
+        classValue            = RE::GFxValue{};
+        isInstalled           = false;
+    }
+
     /* Install SelectionChange handler */
     void OnSelectionChangeHandler::Install()
     {
@@ -583,5 +607,15 @@ namespace RaceMenuHandler
                 raceSexPanelsInstance.Invoke("ShowRaceDescription", &result, argsShow, 1);
             }
         }
+    }
+
+    void OnSelectionChangeHandler::Reset()
+    {
+        raceSexPanelsInstance = RE::GFxValue{};
+        racePanel             = RE::GFxValue{};
+        raceListEntryList     = RE::GFxValue{};
+        raceDescription       = RE::GFxValue{};
+        itemList              = RE::GFxValue{};
+        isInstalled           = false;
     }
 } // namespace RaceMenuHandler

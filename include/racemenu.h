@@ -88,6 +88,7 @@ namespace RaceMenuHandler
         void Call(Params& a_params) override;
         void SendClassTraitModEvents();
         void UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText);
+        void Reset();
     };
 
     class OnSelectionChangeHandler : public RE::GFxFunctionHandler
@@ -107,5 +108,6 @@ namespace RaceMenuHandler
 
         void Install();
         void Call(Params& a_params) override;
+        void Reset();
     };
 } // namespace RaceMenuHandler

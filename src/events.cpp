@@ -84,7 +84,6 @@ namespace Events
 
 				raceMenuInjector->onItemPressHandler->Release();
                 raceMenuInjector->onSelectionChangeHandler->Release();
-                raceMenuInjector->raceSexMovie->Release();
 			}
 			bInitDataCalled = false;  // Reset for next time
 		}
