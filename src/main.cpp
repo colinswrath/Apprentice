@@ -1,11 +1,27 @@
 #include "events.h"
 #include "interface.h"
+#include "jsonhandler.h"
+#include "racemenu.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-        Events::VanillaMenuWatcher::Register();
-        ScaleformInjector::Register();
+        
+        if (auto ui{ RE::UI::GetSingleton() }) {
+            if (auto dataHandler{ RE::TESDataHandler::GetSingleton() }) {
+                // Check for RaceMenu
+                if (dataHandler->LookupLoadedModByName("RaceMenu.esp")) {
+                    Events::RaceMenuWatcher::Register();
+                }
+
+                // Fallback to vanilla integration
+                else {
+                    Events::VanillaMenuWatcher::Register();
+                }
+            }
+        }
+
+        JSONHandler::Register();
     }
 
 }
@@ -30,7 +46,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     if (const auto messaging{ SKSE::GetMessagingInterface() }; !messaging->RegisterListener(Listener)) {
         return false;
     }
-
 
     logger::info("{} has finished loading.", name);
     logger::info("");
