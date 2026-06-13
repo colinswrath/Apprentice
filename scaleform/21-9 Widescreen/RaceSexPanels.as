@@ -510,7 +510,7 @@ class RaceSexPanels extends MovieClip
 	{
 		Mode = bIn ? NAME_ENTRY : PANEL_ONE;
 		if (bIn) {
-			_TextEntryField._x = 500;
+			_TextEntryField._x = 700;
 		}
 		_TextEntryField.onEnterFrame = function ()
 		{
