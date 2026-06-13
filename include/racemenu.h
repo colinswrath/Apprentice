@@ -27,31 +27,28 @@ namespace RaceMenuHandler
         RE::GFxValue raceListEntryList;
         RE::GFxValue categoryListEntryList;
 
-        RE::GPtr<RE::GFxMovieView>         raceSexMovie = nullptr;
-        RE::GPtr<OnItemPressHandler>       onItemPressHandler = nullptr;
-        RE::GPtr<OnSelectionChangeHandler> onSelectionChangeHandler = nullptr;
+        std::string selectedClassCallback;
+        std::string selectedTraitCallback;
 
-        RE::GFxValue traitLabel;
-        RE::GFxValue traitValue;
-        RE::GFxValue classLabel;
-        RE::GFxValue classValue;
+        RE::GPtr<RE::GFxMovieView>         raceSexMovie = nullptr;
 
         i32  numNewCols         = 2;
+        bool bLimitedMenu = false;
         bool categoriesInjected = false;
         bool uiElementsCreated  = false;
 
         bool Install();
 
-        bool PopulateRaceList();
-        bool PopulateCategoryList();
+        bool PopulateRaceList(RE::GPtr<RE::GFxMovieView>);
+        bool PopulateCategoryList(RE::GPtr<RE::GFxMovieView>);
 
-        bool ReplaceEntryPressHandler();
-        bool ReplaceSelectionChangeHandler();
+        bool ReplaceEntryPressHandler(RE::GPtr<RE::GFxMovieView>);
+        bool ReplaceSelectionChangeHandler(RE::GPtr<RE::GFxMovieView>);
 
-        RE::GFxValue BuildCategoryEntry(RE::GFxValue* a_entry, i32 typeInt, i32 filterInt, std::string textString, i32 flagInt, i32 priorityInt);
-        RE::GFxValue BuildListEntry(RE::GFxValue* a_entry, int type, std::string text, int filterFlag, std::string raceDesc, int equipState, int raceID, std::string callbackName,
-                                    bool isClass, bool isTrait);
-        bool         CreateClassTraitUIElements();
+        RE::GFxValue BuildCategoryEntry(RE::GFxValue*, i32, i32, std::string, i32, i32);
+        RE::GFxValue BuildListEntry(RE::GFxValue*, i32, std::string, i32, std::string, i32, i32, std::string, bool, bool);
+        bool         CreateClassTraitUIElements(RE::GPtr<RE::GFxMovieView>);
+        void         SendClassTraitModEvents();
 
     private:
     };

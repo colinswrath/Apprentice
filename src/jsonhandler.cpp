@@ -12,7 +12,7 @@ namespace JSONHandler
         std::ifstream file(filename);
 
         if (!file.is_open()) {
-            logger::info("Failed to finFd {}", filename);
+            logger::info("Failed to find {}", filename);
             return json::array();
         }
 
@@ -58,7 +58,7 @@ namespace JSONHandler
 
             RE::GFxValue fnValue;
 
-            static GetJSONData* getJSONData;
+            static GetJSONData* getJSONData = new GetJSONData;
 
             a_view->CreateFunction(&fnValue, getJSONData);
             LAM.SetMember("GetJSONData", fnValue);

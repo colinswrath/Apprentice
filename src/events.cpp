@@ -30,15 +30,16 @@ namespace Events
 				}
 			}
 		}
+
 		// Send class/trait mod events when menu is closing
-        else {
-			if (const auto raceMenuInjector{ RaceMenuHandler::RaceMenu::GetSingleton() }) {
-				if (raceMenuInjector->onItemPressHandler) {
-                    raceMenuInjector->onItemPressHandler->SendClassTraitModEvents();
-				}
-			}
-			bInitDataCalled = false;  // Reset for next time
-		}
+        if (!a_event->opening)
+		{
+            if (const auto raceMenuInjector{ RaceMenuHandler::RaceMenu::GetSingleton() }) {
+                if (raceMenuInjector) {
+                    raceMenuInjector->SendClassTraitModEvents();
+                }
+            }
+        }
 
 		return RE::BSEventNotifyControl::kContinue;
 	}
@@ -66,8 +67,8 @@ namespace Events
 
 		if (a_event->opening) {
 			if (auto raceSexMenu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
-				if (auto movie{ raceSexMenu->uiMovie.get() }) {
-					movie->Invoke("_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.InitData", nullptr, nullptr, 0);
+				if (auto a_movie{ raceSexMenu->uiMovie.get() }) {
+                    a_movie->Invoke("_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.InitData", nullptr, nullptr, 0);
 					bInitDataCalled = true;
 					logger::info("InitData called for RaceMenu");
 				}
@@ -78,13 +79,8 @@ namespace Events
 			}
 		} else {
 			// Send class/trait mod events when menu is closing
-            if (raceMenuInjector->onItemPressHandler) {
-                raceMenuInjector->onItemPressHandler->SendClassTraitModEvents();
-                logger::info("Sent RaceMenuEvent");
-
-				raceMenuInjector->onItemPressHandler->Release();
-                raceMenuInjector->onSelectionChangeHandler->Release();
-			}
+		    raceMenuInjector->SendClassTraitModEvents();
+            logger::info("Sent RaceMenuEvent");
 			bInitDataCalled = false;  // Reset for next time
 		}
 		

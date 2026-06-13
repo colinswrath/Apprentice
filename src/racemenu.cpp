@@ -16,47 +16,37 @@ namespace RaceMenuHandler
         logger::info("Get UI");
         if (const auto ui{ RE::UI::GetSingleton() }) {
             logger::info("Get menu");
-            if (auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
+            if (const auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
                 if (auto a_movie{ menu->uiMovie }) {
 
-                    if (raceSexMovie != nullptr && raceSexMovie != a_movie) {
-                        if (onItemPressHandler) {
-                            onItemPressHandler->Reset();
-                            onItemPressHandler = nullptr;
-                        }
-                        if (onSelectionChangeHandler) {
-                            onSelectionChangeHandler->Reset();
-                            onSelectionChangeHandler = nullptr;
-                        }
-
-                        racePanel             = RE::GFxValue{};
-                        raceSexPanelsInstance = RE::GFxValue{};
-                        raceListEntryList     = RE::GFxValue{};
-                        categoryListEntryList = RE::GFxValue{};
-
-                        raceSexMovie       = nullptr;
-                        categoriesInjected = false;
-                        uiElementsCreated  = false;
-                    }
-                    //onItemPressHandler       = nullptr;
-                    //onSelectionChangeHandler = nullptr;
+                    racePanel             = RE::GFxValue{};
+                    raceSexPanelsInstance = RE::GFxValue{};
+                    raceListEntryList     = RE::GFxValue{};
+                    categoryListEntryList = RE::GFxValue{};
                     
-                    raceSexMovie = a_movie;
+                    categoriesInjected = false;
+                    uiElementsCreated  = false;
 
+                    // onItemPressHandler       = nullptr;
+                    // onSelectionChangeHandler = nullptr;
 
-                    raceSexMovie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
-                    raceSexMovie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
-                    raceSexMovie->GetVariable(&raceListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
-                    raceSexMovie->GetVariable(&categoryListEntryList,
-                                                "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.slidingCategoryList.categoryList.entryList");
+                    // raceSexMovie = a_movie;
 
-                    PopulateCategoryList();
-                    PopulateRaceList();
-                    ReplaceEntryPressHandler();
-                    ReplaceSelectionChangeHandler();
-                    CreateClassTraitUIElements();
+                    a_movie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
+                    a_movie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
+                    a_movie->GetVariable(&raceListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
+                    a_movie->GetVariable(&categoryListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.slidingCategoryList.categoryList.entryList");
 
-                    return true;
+                    bLimitedMenu = Utils::GetBooleanMember(raceSexPanelsInstance, "bLimitedMenu");
+
+                    if (!bLimitedMenu) {
+                        PopulateCategoryList(a_movie);
+                        PopulateRaceList(a_movie);
+                        ReplaceEntryPressHandler(a_movie);
+                        ReplaceSelectionChangeHandler(a_movie);
+                        CreateClassTraitUIElements(a_movie);
+                        return true;
+                    }
                 }
             }
         }
@@ -64,9 +54,9 @@ namespace RaceMenuHandler
     }
 
     /* Add Classes/Traits to Race list (helps leverage existing Scaleform functions for Race)  */
-    bool RaceMenu::PopulateRaceList()
+    bool RaceMenu::PopulateRaceList(RE::GPtr<RE::GFxMovieView> a_movie)
     {
-        const u32                        size = raceListEntryList.GetArraySize();
+        const u32                       size = raceListEntryList.GetArraySize();
         static JSONHandler::GetJSONData getJSONData;
 
         auto      classEntryJSON = getJSONData.LoadJSON("Data/SKSE/Plugins/app_classes.json");
@@ -82,7 +72,7 @@ namespace RaceMenuHandler
 
             json el = classEntryJSON[i];
 
-            raceSexMovie->CreateObject(&classEntry);
+            a_movie->CreateObject(&classEntry);
 
             // Populate the classEntry
             BuildListEntry(&classEntry, ENTRY_TYPE_RACE, el["Name"], classFlag, el["Description"], 0, i, el["UniqueKey"], true, false);
@@ -97,7 +87,7 @@ namespace RaceMenuHandler
 
             json el = traitEntryJSON[i];
 
-            raceSexMovie->CreateObject(&traitEntry);
+            a_movie->CreateObject(&traitEntry);
 
             // Populate the traitEntry
             BuildListEntry(&traitEntry, ENTRY_TYPE_RACE, el["Name"], traitFlag, el["Description"], 0, 0, el["UniqueKey"], false, true);
@@ -112,7 +102,7 @@ namespace RaceMenuHandler
     }
 
     /* Add new categories to list of tabs*/
-    bool RaceMenu::PopulateCategoryList()
+    bool RaceMenu::PopulateCategoryList(RE::GPtr<RE::GFxMovieView> a_movie)
     {
         const u32 size    = categoryListEntryList.GetArraySize();
         const u32 newSize = size + numNewCols;
@@ -122,8 +112,8 @@ namespace RaceMenuHandler
         RE::GFxValue classEntry;
         RE::GFxValue traitEntry;
 
-        raceSexMovie->CreateObject(&classEntry);
-        raceSexMovie->CreateObject(&traitEntry);
+        a_movie->CreateObject(&classEntry);
+        a_movie->CreateObject(&traitEntry);
 
         BuildCategoryEntry(&classEntry, 0, 1, "CLASS", classFlag, -970);
         BuildCategoryEntry(&traitEntry, 0, 1, "TRAIT", traitFlag, -965);
@@ -138,77 +128,73 @@ namespace RaceMenuHandler
     }
 
     /* Replace the handler for when a Race selection is clicked */
-    bool RaceMenu::ReplaceEntryPressHandler()
+    bool RaceMenu::ReplaceEntryPressHandler(RE::GPtr<RE::GFxMovieView> a_movie)
     {
-        if (onItemPressHandler == nullptr) {
-            // Remove RaceMenu onItemPress listener
-            RE::GFxValue result;
-            RE::GFxValue argsRemove[3];
-            argsRemove[0].SetString("itemPress");
-            argsRemove[1] = raceSexPanelsInstance;
-            argsRemove[2].SetString("onItemPress");
-            raceSexPanelsInstance.Invoke("removeEventListener", &result, argsRemove, 3);
-            logger::info("Removed Event Listener");
+        // Remove RaceMenu onItemPress listener
+        RE::GFxValue result;
+        RE::GFxValue argsRemove[3];
+        argsRemove[0].SetString("itemPress");
+        argsRemove[1] = raceSexPanelsInstance;
+        argsRemove[2].SetString("onItemPress");
+        raceSexPanelsInstance.Invoke("removeEventListener", &result, argsRemove, 3);
+        logger::info("Removed Event Listener");
 
-            // Stash the original
-            RE::GFxValue _onItemPress;
-            raceSexPanelsInstance.GetMember("onItemPress", &_onItemPress);
-            raceSexPanelsInstance.SetMember("__onItemPress", _onItemPress);
-            RE::GFxValue onItemPress = nullptr;
+        // Stash the original
+        RE::GFxValue _onItemPress;
+        raceSexPanelsInstance.GetMember("onItemPress", &_onItemPress);
+        raceSexPanelsInstance.SetMember("__onItemPress", _onItemPress);
+        RE::GFxValue onItemPress = nullptr;
 
-            onItemPressHandler = RE::make_gptr<OnItemPressHandler>(_onItemPress);
+        RE::GPtr<OnItemPressHandler> onItemPressHandler;
+        onItemPressHandler = RE::make_gptr<OnItemPressHandler>(_onItemPress);
 
-            raceSexMovie->CreateFunction(&onItemPress, onItemPressHandler.get());
-            raceSexPanelsInstance.SetMember("onItemPress", onItemPress);
+        a_movie->CreateFunction(&onItemPress, onItemPressHandler.get());
+        raceSexPanelsInstance.SetMember("onItemPress", onItemPress);
 
-            // Replace with new onItemPress listener
-            RE::GFxValue argsAdd[3];
-            argsAdd[0].SetString("itemPress");
-            argsAdd[1] = raceSexPanelsInstance;
-            argsAdd[2].SetString("onItemPress");
-            raceSexPanelsInstance.Invoke("addEventListener", &result, argsAdd, 3);
-            logger::info("Readded new Event Listener");
+        // Replace with new onItemPress listener
+        RE::GFxValue argsAdd[3];
+        argsAdd[0].SetString("itemPress");
+        argsAdd[1] = raceSexPanelsInstance;
+        argsAdd[2].SetString("onItemPress");
+        raceSexPanelsInstance.Invoke("addEventListener", &result, argsAdd, 3);
+        logger::info("Readded new Event Listener");
 
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /* Replace the handler for when a Race selection is highlighted */
-    bool RaceMenu::ReplaceSelectionChangeHandler()
+    bool RaceMenu::ReplaceSelectionChangeHandler(RE::GPtr<RE::GFxMovieView> a_movie)
     {
-        if (onSelectionChangeHandler == nullptr) {
-            // Remove RaceMenu onSelectionChangeHandler listener
-            RE::GFxValue result;
-            RE::GFxValue argsRemove[3];
-            argsRemove[0].SetString("selectionChange");
-            argsRemove[1] = raceSexPanelsInstance;
-            argsRemove[2].SetString("onSelectionChange");
-            raceSexPanelsInstance.Invoke("removeEventListener", &result, argsRemove, 3);
-            logger::info("Removed Event Listener");
+        // Remove RaceMenu onSelectionChangeHandler listener
+        RE::GFxValue result;
+        RE::GFxValue argsRemove[3];
+        argsRemove[0].SetString("selectionChange");
+        argsRemove[1] = raceSexPanelsInstance;
+        argsRemove[2].SetString("onSelectionChange");
+        raceSexPanelsInstance.Invoke("removeEventListener", &result, argsRemove, 3);
+        logger::info("Removed Event Listener");
 
-            // Stash the original
-            RE::GFxValue _onSelectionChange;
-            raceSexPanelsInstance.GetMember("onSelectionChange", &_onSelectionChange);
-            raceSexPanelsInstance.SetMember("__onSelectionChange", _onSelectionChange);
-            RE::GFxValue onSelectionChange = nullptr;
+        // Stash the original
+        RE::GFxValue _onSelectionChange;
+        raceSexPanelsInstance.GetMember("onSelectionChange", &_onSelectionChange);
+        raceSexPanelsInstance.SetMember("__onSelectionChange", _onSelectionChange);
+        RE::GFxValue onSelectionChange = nullptr;
 
-            onSelectionChangeHandler = RE::make_gptr<OnSelectionChangeHandler>(_onSelectionChange);
+        RE::GPtr<OnSelectionChangeHandler> onSelectionChangeHandler;
+        onSelectionChangeHandler = RE::make_gptr<OnSelectionChangeHandler>(_onSelectionChange);
 
-            raceSexMovie->CreateFunction(&onSelectionChange, onSelectionChangeHandler.get());
-            raceSexPanelsInstance.SetMember("onSelectionChange", onSelectionChange);
+        a_movie->CreateFunction(&onSelectionChange, onSelectionChangeHandler.get());
+        raceSexPanelsInstance.SetMember("onSelectionChange", onSelectionChange);
 
-            // Replace with new onSelectionChange listener
-            RE::GFxValue argsAdd[3];
-            argsAdd[0].SetString("selectionChange");
-            argsAdd[1] = raceSexPanelsInstance;
-            argsAdd[2].SetString("onSelectionChange");
-            raceSexPanelsInstance.Invoke("addEventListener", &result, argsAdd, 3);
-            logger::info("Readded new Event Listener");
+        // Replace with new onSelectionChange listener
+        RE::GFxValue argsAdd[3];
+        argsAdd[0].SetString("selectionChange");
+        argsAdd[1] = raceSexPanelsInstance;
+        argsAdd[2].SetString("onSelectionChange");
+        raceSexPanelsInstance.Invoke("addEventListener", &result, argsAdd, 3);
+        logger::info("Readded new Event Listener");
 
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /* Build Scaleform element for new category */
@@ -225,7 +211,7 @@ namespace RaceMenuHandler
     }
 
     /* Build Scaleform element for new list entry */
-    RE::GFxValue RaceMenu::BuildListEntry(RE::GFxValue* a_entry, int type, std::string text, int filterFlag, std::string raceDesc, int equipState, int raceID,
+    RE::GFxValue RaceMenu::BuildListEntry(RE::GFxValue* a_entry, i32 type, std::string text, i32 filterFlag, std::string raceDesc, i32 equipState, i32 raceID,
                                           std::string callbackName, bool isClass, bool isTrait)
     {
         Utils::AddIntMember(a_entry, type, "type");
@@ -242,162 +228,28 @@ namespace RaceMenuHandler
         return a_entry;
     }
 
-    /* Install ItemPress handler */
-    void OnItemPressHandler::Install()
-    {
-        if (const auto ui{ RE::UI::GetSingleton() }) {
-            if (const auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
-                if (const auto a_movie{ menu->uiMovie }) {
-                    a_movie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
-                    a_movie->GetVariable(&itemListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
-                    a_movie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
-                    a_movie->GetVariable(&playerInfoMc, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo");
-                    a_movie->GetVariable(&raceDescriptionMovie, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.raceDescription");
-
-                    // Cache useful members
-                    racePanel.GetMember("itemList", &itemList);
-                    racePanel.GetMember("updateBottomBar", &_updateBottomBar);
-                    // raceDescriptionMovie.GetMember("textField", &raceDescriptionField);
-                    itemList.GetMember("requestUpdate", &_requestUpdate);
-                    isInstalled = true;
-
-                    playerInfoMc.GetMember("TraitValue", &traitValue);
-                    playerInfoMc.GetMember("ClassValue", &classValue);
-                }
-            }
-        }
-    }
-
-    void OnItemPressHandler::Call(Params& a_params)
-    {
-        assert(a_params.argCount >= 1);
-        auto& event = a_params.args[0];
-
-        if (!isInstalled) {
-            Install();
-            logger::info("OnItemPressHandler Installed");
-        }
-
-        RE::GFxValue listState;
-        itemList.GetMember("listState", &listState);
-
-        RE::GFxValue activeEntry;
-        listState.GetMember("activeEntry", &activeEntry);
-
-        RE::GFxValue indexVal;
-        event.GetMember("index", &indexVal);
-        i32 index = static_cast<i32>(indexVal.GetNumber());
-
-        RE::GFxValue pressedEntry;
-        itemListEntryList.GetElement(index, &pressedEntry);
-
-        RE::GFxValue typeVal;
-        pressedEntry.GetMember("type", &typeVal);
-        i32 type = static_cast<i32>(typeVal.GetNumber());
-
-        RE::GFxValue result;
-
-        bool isClass = Utils::GetBooleanMember(pressedEntry, "isClass");
-        bool isTrait = Utils::GetBooleanMember(pressedEntry, "isTrait");
-
-        // Check if Class/Trait entry
-        if (Utils::IsClassOrTrait(pressedEntry)) {
-            // Store the callback for later mod event dispatch
-            if (pressedEntry.HasMember("callbackName")) {
-                RE::GFxValue callbackVal;
-                pressedEntry.GetMember("callbackName", &callbackVal);
-                std::string callback = callbackVal.GetString();
-                logger::info("callback {}", callback);
-                if (isClass) {
-                    selectedClassCallback = callback;
-                    logger::info("Selected Class callback: {}", callback);
-                }
-                else if (isTrait) {
-                    selectedTraitCallback = callback;
-                    logger::info("Selected Trait callback: {}", callback);
-                }
-            }
-
-            // Update the UI display with the selected name
-            RE::GFxValue nameVal;
-            pressedEntry.GetMember("text", &nameVal);
-            std::string selectedName = nameVal.GetString();
-
-            if (isClass) {
-                UpdateClassTraitDisplay(selectedName, "");
-            }
-            else if (isTrait) {
-                UpdateClassTraitDisplay("", selectedName);
-            }
-
-            listState.SetMember("activeEntry", pressedEntry);
-
-            itemList.Invoke("requestUpdate", &result, nullptr, 0);
-            racePanel.Invoke("updateBottomBar", &result, nullptr, 0);
-
-            RE::GFxValue sliderID;
-            double       sliderIDVal = 0.0;
-            if (pressedEntry.GetMember("sliderID", &sliderID)) {
-                sliderIDVal = sliderID.GetNumber();
-            }
-
-            RE::GFxValue raceID;
-            double       raceIDVal = 0.0;
-
-            if (pressedEntry.GetMember("raceID", &raceID)) {
-                raceIDVal = raceID.GetNumber();
-            }
-
-            RE::GFxValue result;
-            RE::GFxValue argsShow[2];
-            argsShow[0].SetNumber(raceIDVal);
-            argsShow[1].SetNumber(sliderIDVal);
-            argsShow[0].SetBoolean(true);
-
-            raceSexPanelsInstance.Invoke("ChangeRace", &result, argsShow, 0);
-            return;
-        }
-
-        raceSexPanelsInstance.Invoke("__onItemPress", &result, a_params.args, a_params.argCount);
-        logger::info("Delegated to original onItemPress");
-    }
-
-    /* Trigger callback */
-    void OnItemPressHandler::SendClassTraitModEvents()
-    {
-        // Send mod events for selected class and trait
-        if (!selectedClassCallback.empty()) {
-            Utils::SendModEvent("ClassMenu_Callback", selectedClassCallback, 1.0f);
-            logger::info("Sent ClassMenu_Callback mod event with value: {}", selectedClassCallback);
-        }
-        if (!selectedTraitCallback.empty()) {
-            Utils::SendModEvent("TraitMenu_Callback", selectedTraitCallback, 1.0f);
-            logger::info("Sent TraitMenu_Callback mod event with value: {}", selectedTraitCallback);
-        }
-    }
-
     /* Add misc UI elements */
-    bool RaceMenu::CreateClassTraitUIElements()
+    bool RaceMenu::CreateClassTraitUIElements(RE::GPtr<RE::GFxMovieView> a_movie)
     {
-        if (!raceSexMovie) {
+        if (!a_movie) {
             return false;
         }
 
         RE::GFxValue playerInfoMc;
-        if (!raceSexMovie->GetVariable(&playerInfoMc, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo")) {
+        if (!a_movie->GetVariable(&playerInfoMc, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo")) {
             logger::warn("Could not get PlayerInfo_mc");
             return false;
         }
 
         // Pull existing BottomBar fields to duplicate from
         RE::GFxValue playerNameLabel;
-        if (!raceSexMovie->GetVariable(&playerNameLabel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo.NameLabel")) {
+        if (!a_movie->GetVariable(&playerNameLabel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo.NameLabel")) {
             logger::warn("Could not get PlayerNameLabel TextField for reference");
             return false;
         }
 
         RE::GFxValue playerNameValue;
-        if (!raceSexMovie->GetVariable(&playerNameValue, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo.PlayerName")) {
+        if (!a_movie->GetVariable(&playerNameValue, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo.PlayerName")) {
             logger::warn("Could not get PlayerNameValue TextField for reference");
             return false;
         }
@@ -408,6 +260,11 @@ namespace RaceMenuHandler
         RE::GFxValue height;
         RE::GFxValue depth;
         RE::GFxValue textFormat;
+
+        RE::GFxValue traitLabel;
+        RE::GFxValue traitValue;
+        RE::GFxValue classLabel;
+        RE::GFxValue classValue;
 
         // Create Trait Label
         playerNameLabel.GetMember("_x", &xPos);
@@ -509,6 +366,144 @@ namespace RaceMenuHandler
         return true;
     }
 
+    /* Trigger callback */
+    void RaceMenu::SendClassTraitModEvents()
+    {
+        // Send mod events for selected class and trait
+        if (!selectedClassCallback.empty()) {
+            Utils::SendModEvent("ClassMenu_Callback", selectedClassCallback, 1.0f);
+            logger::info("Sent ClassMenu_Callback mod event with value: {}", selectedClassCallback);
+        }
+        if (!selectedTraitCallback.empty()) {
+            Utils::SendModEvent("TraitMenu_Callback", selectedTraitCallback, 1.0f);
+            logger::info("Sent TraitMenu_Callback mod event with value: {}", selectedTraitCallback);
+        }
+    }
+
+    /* Install ItemPress handler */
+    void OnItemPressHandler::Install()
+    {
+        if (const auto ui{ RE::UI::GetSingleton() }) {
+            if (const auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
+                if (const auto a_movie{ menu->uiMovie }) {
+                    a_movie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
+                    a_movie->GetVariable(&itemListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
+                    a_movie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
+                    a_movie->GetVariable(&playerInfoMc, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.bottomBar.playerInfo");
+                    a_movie->GetVariable(&raceDescriptionMovie, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.raceDescription");
+
+                    // Cache useful members
+                    racePanel.GetMember("itemList", &itemList);
+                    racePanel.GetMember("updateBottomBar", &_updateBottomBar);
+                    // raceDescriptionMovie.GetMember("textField", &raceDescriptionField);
+                    itemList.GetMember("requestUpdate", &_requestUpdate);
+                    isInstalled = true;
+
+                    playerInfoMc.GetMember("TraitValue", &traitValue);
+                    playerInfoMc.GetMember("ClassValue", &classValue);
+                }
+            }
+        }
+    }
+
+    void OnItemPressHandler::Call(Params& a_params)
+    {
+        assert(a_params.argCount >= 1);
+        auto& event = a_params.args[0];
+
+        if (!isInstalled) {
+            Install();
+            logger::info("OnItemPressHandler Installed");
+        }
+
+        RE::GFxValue listState;
+        itemList.GetMember("listState", &listState);
+
+        RE::GFxValue activeEntry;
+        listState.GetMember("activeEntry", &activeEntry);
+
+        RE::GFxValue indexVal;
+        event.GetMember("index", &indexVal);
+        i32 index = static_cast<i32>(indexVal.GetNumber());
+
+        RE::GFxValue pressedEntry;
+        itemListEntryList.GetElement(index, &pressedEntry);
+
+        RE::GFxValue typeVal;
+        pressedEntry.GetMember("type", &typeVal);
+        i32 type = static_cast<i32>(typeVal.GetNumber());
+
+        RE::GFxValue result;
+
+        bool isClass = Utils::GetBooleanMember(pressedEntry, "isClass");
+        bool isTrait = Utils::GetBooleanMember(pressedEntry, "isTrait");
+
+        // Check if Class/Trait entry
+        if (Utils::IsClassOrTrait(pressedEntry)) {
+            // Store the callback for later mod event dispatch
+            if (pressedEntry.HasMember("callbackName")) {
+                RE::GFxValue callbackVal;
+                pressedEntry.GetMember("callbackName", &callbackVal);
+                std::string callback = callbackVal.GetString();
+                logger::info("callback {}", callback);
+
+                const auto raceMenuInjector = RaceMenuHandler::RaceMenu::GetSingleton();
+
+                if (isClass) {
+                    raceMenuInjector->selectedClassCallback = callback;
+                    logger::info("Selected Class callback: {}", callback);
+                }
+                else if (isTrait) {
+                    raceMenuInjector->selectedTraitCallback = callback;
+                    logger::info("Selected Trait callback: {}", callback);
+                }
+            }
+
+            // Update the UI display with the selected name
+            RE::GFxValue nameVal;
+            pressedEntry.GetMember("text", &nameVal);
+            std::string selectedName = nameVal.GetString();
+
+            if (isClass) {
+                UpdateClassTraitDisplay(selectedName, "");
+            }
+            else if (isTrait) {
+                UpdateClassTraitDisplay("", selectedName);
+            }
+
+            listState.SetMember("activeEntry", pressedEntry);
+
+            itemList.Invoke("requestUpdate", &result, nullptr, 0);
+            racePanel.Invoke("updateBottomBar", &result, nullptr, 0);
+
+            RE::GFxValue sliderID;
+            double       sliderIDVal = 0.0;
+            if (pressedEntry.GetMember("sliderID", &sliderID)) {
+                sliderIDVal = sliderID.GetNumber();
+            }
+
+            RE::GFxValue raceID;
+            double       raceIDVal = 0.0;
+
+            if (pressedEntry.GetMember("raceID", &raceID)) {
+                raceIDVal = raceID.GetNumber();
+            }
+
+            RE::GFxValue result;
+            RE::GFxValue argsShow[2];
+            argsShow[0].SetNumber(raceIDVal);
+            argsShow[1].SetNumber(sliderIDVal);
+            argsShow[0].SetBoolean(true);
+
+            raceSexPanelsInstance.Invoke("ChangeRace", &result, argsShow, 0);
+            return;
+        }
+
+        raceSexPanelsInstance.Invoke("__onItemPress", &result, a_params.args, a_params.argCount);
+        logger::info("Delegated to original onItemPress");
+    }
+
+    /* Set display text for Class/Trait */
     void OnItemPressHandler::UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText)
     {
         if (!classText.empty()) {
@@ -520,19 +515,6 @@ namespace RaceMenuHandler
             Utils::AddStringMember(&traitValue, traitText.c_str(), "text");
             logger::info("Updated Trait display to: {}", traitText);
         }
-    }
-
-    void OnItemPressHandler::Reset()
-    {
-        raceSexPanelsInstance = RE::GFxValue{};
-        itemListEntryList     = RE::GFxValue{};
-        racePanel             = RE::GFxValue{};
-        itemList              = RE::GFxValue{};
-        playerInfoMc          = RE::GFxValue{};
-        raceDescriptionMovie  = RE::GFxValue{};
-        traitValue            = RE::GFxValue{};
-        classValue            = RE::GFxValue{};
-        isInstalled           = false;
     }
 
     /* Install SelectionChange handler */
