@@ -22,13 +22,16 @@ namespace RaceMenuHandler
         RE::GFxValue racePanel;
         RE::GFxValue categoryList;
         RE::GFxValue itemList;
-
-        RE::GFxValue slidingCategoryList;
         RE::GFxValue raceListEntryList;
         RE::GFxValue categoryListEntryList;
 
         std::string selectedClassCallback;
         std::string selectedTraitCallback;
+
+        std::string defaultClass = "";
+        std::string defaultTrait = "";
+        std::string defaultClassCallback = "";
+        std::string defaultTraitCallback = "";
 
         RE::GPtr<RE::GFxMovieView>         raceSexMovie = nullptr;
 
@@ -100,6 +103,7 @@ namespace RaceMenuHandler
         RE::GFxValue _showRaceDescription;
         RE::GFxValue _onSelectionChange;
         bool         isInstalled = false;
+        i32          cachedIndex = -1;
 
         OnSelectionChangeHandler(const RE::GFxValue& a_orig) : _onSelectionChange(a_orig) {}
 
