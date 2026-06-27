@@ -13,9 +13,7 @@ namespace RaceMenuHandler
     /* Inject Scaleform elements into RaceMenu UI*/
     bool RaceMenu::Install()
     {
-        logger::info("Get UI");
         if (const auto ui{ RE::UI::GetSingleton() }) {
-            logger::info("Get menu");
             if (const auto menu{ ui->GetMenu(RE::RaceSexMenu::MENU_NAME) }) {
                 if (auto a_movie{ menu->uiMovie }) {
 
@@ -27,7 +25,10 @@ namespace RaceMenuHandler
                     categoriesInjected = false;
                     uiElementsCreated  = false;
 
-                    a_movie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel");
+                    if (!a_movie->GetVariable(&racePanel, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel")) {
+                        // Element only present in RaceMenu, element not found -> cannot install RaceMenu
+                        return false;
+                    }
                     a_movie->GetVariable(&raceSexPanelsInstance, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance");
                     a_movie->GetVariable(&raceListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.itemList.entryList");
                     a_movie->GetVariable(&categoryListEntryList, "_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.racePanel.slidingCategoryList.categoryList.entryList");
@@ -380,8 +381,8 @@ namespace RaceMenuHandler
         // Send mod events for selected class and trait
         if (!selectedClassCallback.empty()) {
             Utils::SendModEvent("ClassMenu_Callback", selectedClassCallback, 1.0f);
-            selectedClassCallback = "";
             logger::info("Sent ClassMenu_Callback mod event with value: {}", selectedClassCallback);
+            selectedClassCallback = "";
         }
         else {
             Utils::SendModEvent("ClassMenu_Callback", defaultClassCallback, 1.0f);
@@ -391,8 +392,8 @@ namespace RaceMenuHandler
 
         if (!selectedTraitCallback.empty()) {
             Utils::SendModEvent("TraitMenu_Callback", selectedTraitCallback, 1.0f);
-            selectedTraitCallback = "";
             logger::info("Sent TraitMenu_Callback mod event with value: {}", selectedTraitCallback);
+            selectedTraitCallback = "";
         }
         else {
             Utils::SendModEvent("TraitMenu_Callback", defaultTraitCallback, 1.0f);

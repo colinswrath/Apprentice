@@ -2,23 +2,13 @@
 
 namespace Events
 {
-	class VanillaMenuWatcher : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
+	class RaceSexMenuWatcher : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
 	{
 	public:
 		RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* a_event, RE::BSTEventSource<RE::MenuOpenCloseEvent>*);
-		static void Register();
+		static bool Register();
 
-		bool bGetJSONDataRegistered = false;
-		bool bInitDataCalled = false;
-	};
-
-	class RaceMenuWatcher : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
-	{
-	public:
-		RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* a_event, RE::BSTEventSource<RE::MenuOpenCloseEvent>*);
-		static void Register();
-
-		bool bInitDataCalled = false;
+        bool bIsRaceMenu            = false;
 	};
 }
 

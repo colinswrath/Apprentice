@@ -6,21 +6,7 @@
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-        
-        if (auto ui{ RE::UI::GetSingleton() }) {
-            if (auto dataHandler{ RE::TESDataHandler::GetSingleton() }) {
-                // Check for RaceMenu
-                if (dataHandler->LookupLoadedModByName("RaceMenu.esp")) {
-                    Events::RaceMenuWatcher::Register();
-                }
-
-                // Fallback to vanilla integration
-                else {
-                    Events::VanillaMenuWatcher::Register();
-                }
-            }
-        }
-
+        Events::RaceSexMenuWatcher::Register();
         JSONHandler::Register();
     }
 
