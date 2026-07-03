@@ -1,0 +1,34 @@
+name: Xmake CI
+
+on: 
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: 'latest'
+
+    - name: Configure project
+      run: xmake config -m releasedbg -y
+    
+    - name: Build project
+      run: xmake build
+ 
+    - name: Release By Tag
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/windows/x64/releasedbg/apprentice.dll,build/windows/x64/releasedbg/apprentice.pdb"
+        generateReleaseNotes: true  # Auto-generate release notes based on PRs and commits
+        makeLatest: true
