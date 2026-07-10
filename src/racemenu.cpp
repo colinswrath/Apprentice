@@ -124,8 +124,8 @@ namespace RaceMenuHandler
         a_movie->CreateObject(&classEntry);
         a_movie->CreateObject(&traitEntry);
 
-        BuildCategoryEntry(&classEntry, 0, 1, "CLASS", classFlag, -970);
-        BuildCategoryEntry(&traitEntry, 0, 1, "TRAIT", traitFlag, -965);
+        BuildCategoryEntry(&classEntry, 0, 1, "$APPCLASS", classFlag, -970);
+        BuildCategoryEntry(&traitEntry, 0, 1, "$APPTRAIT", traitFlag, -965);
 
         categoryListEntryList.SetElement(newSize - 2, classEntry);
         categoryListEntryList.SetElement(newSize - 1, traitEntry);
@@ -293,7 +293,7 @@ namespace RaceMenuHandler
         playerInfoMc.Invoke("createTextField", nullptr, argsCreate, 6);
 
         playerInfoMc.GetMember("TraitLabel", &traitLabel);
-        Utils::AddStringMember(&traitLabel, "TRAIT", "text");
+        Utils::AddStringMember(&traitLabel, "$APPTRAIT", "text");
 
         RE::GFxValue fmtArgs[1];
         fmtArgs[0] = textFormat;
@@ -340,7 +340,7 @@ namespace RaceMenuHandler
         playerInfoMc.Invoke("createTextField", nullptr, argsCreate, 6);
 
         playerInfoMc.GetMember("ClassLabel", &classLabel);
-        Utils::AddStringMember(&classLabel, "CLASS", "text");
+        Utils::AddStringMember(&classLabel, "$APPCLASS", "text");
 
         fmtArgs[0] = textFormat;
         classLabel.Invoke("setTextFormat", nullptr, fmtArgs, 1);

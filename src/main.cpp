@@ -14,9 +14,6 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-    //while (!IsDebuggerPresent())
-    //   Sleep(1000);
-
     REL::Module::reset();
 
     Init(skse);

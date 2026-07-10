@@ -241,13 +241,13 @@ class RaceSexPanels extends MovieClip
 				if (bUseClasses)
 				{
 					var classFlag:Number = 512;
-					var classObject:Object = bLimitedMenu ? {text:"", flag:classFlag, savedItemIndex:0} : {text:"Class", flag:classFlag, savedItemIndex:0};
+					var classObject:Object = bLimitedMenu ? {text:"", flag:classFlag, savedItemIndex:0} : {text:"$APPCLASSHEADER", flag:classFlag, savedItemIndex:0};
 					_CategoriesList.entryList.push(classObject);
 				}
 				if (bUseTraits)
 				{
 					var traitFlag:Number = bUseClasses ? 1024 : 512;
-					var traitObject:Object = bLimitedMenu ? {text:"", flag:traitFlag, savedItemIndex:0} : {text:"Trait", flag:traitFlag, savedItemIndex:0};
+					var traitObject:Object = bLimitedMenu ? {text:"", flag:traitFlag, savedItemIndex:0} : {text:"$APPTRAITHEADER", flag:traitFlag, savedItemIndex:0};
 					_CategoriesList.entryList.push(traitObject);
 				}
 
@@ -490,7 +490,6 @@ class RaceSexPanels extends MovieClip
 				_root.RaceSexMenuBaseInstance.LoadingIconInstance._visible = false;
 			}
 			switch (_CategoriesList.selectedIndex)
-
 			{
 				case RaceSexPanels.RACE_CATEGORY :
 					RaceSexPanels.UpdateInterval = setInterval(RaceSexPanels.PrepForCallCode, 600, "ChangeRace", _SubList1.selectedIndex, _SubList1.entryList[_SubList1.selectedIndex].sliderID);
