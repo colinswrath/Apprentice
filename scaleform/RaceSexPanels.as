@@ -104,6 +104,8 @@ class RaceSexPanels extends MovieClip
 		_root.RaceSexMenuBaseInstance.BottomBarInstance.ButtonsInstance.Lock("L");
 		_root.RaceSexMenuBaseInstance.BottomBarInstance.PlayerInfo_mc.Lock("R");
 		_root.RaceSexMenuBaseInstance.CagetoryLockBaseInstance.Lock("T");
+		this._parent.LeftClickInstance.Lock("T");
+      	this._parent.RightClickInstance.Lock("T");
 		_TextEntryField.SetupButtons();
 		_TextEntryField.TextInputInstance.maxChars = 26;
 	}
