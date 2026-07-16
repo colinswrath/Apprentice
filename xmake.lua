@@ -3,6 +3,7 @@ set_xmakever("2.8.2")
 
 -- includes
 includes("lib/commonlibsse-ng")
+add_requires("simpleini")
 add_requires("nlohmann_json")
 
 -- set project
@@ -26,6 +27,7 @@ target("Apprentice")
     -- add dependencies to target
     add_deps("commonlibsse-ng")
     add_packages("nlohmann_json")
+    add_packages("simpleini")
 
     -- add commonlibsse-ng plugin
     add_rules("commonlibsse-ng.plugin", {

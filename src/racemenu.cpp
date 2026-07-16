@@ -1,9 +1,10 @@
 #include "racemenu.h"
+#include "jsonhandler.h"
+#include "settings.h"
+#include "utils.h"
 
 #include <array>
-
-#include "jsonhandler.h"
-#include "utils.h"
+#include <sstream>
 
 i32 classFlag = 1u << 29;
 i32 traitFlag = 1u << 30;
@@ -36,11 +37,12 @@ namespace RaceMenuHandler
                     bLimitedMenu = Utils::GetBooleanMember(raceSexPanelsInstance, "bLimitedMenu");
 
                     if (!bLimitedMenu) {
+                        SetDefaultSelections();
                         ReplaceEntryPressHandler(a_movie);
                         ReplaceSelectionChangeHandler(a_movie);
                         PopulateCategoryList(a_movie);
-                        PopulateRaceList(a_movie);
-                        CreateClassTraitUIElements(a_movie);
+                        PopulateEntryList(a_movie);
+                        CreateUIElements(a_movie);
                         return true;
                     }
                 }
@@ -50,7 +52,7 @@ namespace RaceMenuHandler
     }
 
     /* Add Classes/Traits to Race list (helps leverage existing Scaleform functions for Race)  */
-    bool RaceMenu::PopulateRaceList(RE::GPtr<RE::GFxMovieView> a_movie)
+    bool RaceMenu::PopulateEntryList(RE::GPtr<RE::GFxMovieView> a_movie)
     {
         const u32                       size = raceListEntryList.GetArraySize();
         static JSONHandler::GetJSONData getJSONData;
@@ -69,8 +71,8 @@ namespace RaceMenuHandler
             json el = classEntryJSON[i];
 
             if (i == 0) {
-                defaultClass = el["Name"];
-                defaultClassCallback = el["UniqueKey"];
+                //defaultClass = el["Name"];
+                //defaultClassCallback = el["UniqueKey"];
             }
 
             a_movie->CreateObject(&classEntry);
@@ -92,8 +94,8 @@ namespace RaceMenuHandler
             json el = traitEntryJSON[i];
 
             if (i == 0) {
-                defaultTrait = el["Name"];
-                defaultTraitCallback = el["UniqueKey"];
+                //defaultTrait = el["Name"];
+                //defaultTraitCallback = el["UniqueKey"];
             }
 
             a_movie->CreateObject(&traitEntry);
@@ -238,7 +240,7 @@ namespace RaceMenuHandler
     }
 
     /* Add misc UI elements */
-    bool RaceMenu::CreateClassTraitUIElements(RE::GPtr<RE::GFxMovieView> a_movie)
+    bool RaceMenu::CreateUIElements(RE::GPtr<RE::GFxMovieView> a_movie)
     {
         if (!a_movie) {
             return false;
@@ -376,15 +378,18 @@ namespace RaceMenuHandler
     }
 
     /* Trigger callback */
-    void RaceMenu::SendClassTraitModEvents()
+    void RaceMenu::SendModEvents()
     {
+        const auto settingsHandler = Settings::GetSingleton();
+
         // Send mod events for selected class and trait
         if (!selectedClassCallback.empty()) {
             Utils::SendModEvent("ClassMenu_Callback", selectedClassCallback, 1.0f);
             logger::info("Sent ClassMenu_Callback mod event with value: {}", selectedClassCallback);
+            defaultClassCallback  = selectedClassCallback;
             selectedClassCallback = "";
         }
-        else {
+        else if (settingsHandler->MAG_ClassTracker) {
             Utils::SendModEvent("ClassMenu_Callback", defaultClassCallback, 1.0f);
             logger::info("Sent fallback ClassMenu_Callback mod event with value: {}", defaultClassCallback);
         }
@@ -393,11 +398,46 @@ namespace RaceMenuHandler
         if (!selectedTraitCallback.empty()) {
             Utils::SendModEvent("TraitMenu_Callback", selectedTraitCallback, 1.0f);
             logger::info("Sent TraitMenu_Callback mod event with value: {}", selectedTraitCallback);
+            defaultTraitCallback  = selectedTraitCallback;
             selectedTraitCallback = "";
         }
-        else {
+        else if (settingsHandler->MAG_TraitTracker) {
             Utils::SendModEvent("TraitMenu_Callback", defaultTraitCallback, 1.0f);
             logger::info("Sent fallback TraitMenu_Callback mod event with value: {}", defaultTraitCallback);
+        }
+    }
+
+    /* Check TESGlobal for pre-existing selections */
+    void RaceMenu::SetDefaultSelections()
+    {
+        const auto  settingsHandler      = Settings::GetSingleton();
+        static JSONHandler::GetJSONData getJSONData;
+
+        auto classEntryJSON = getJSONData.LoadJSON("Data/SKSE/Plugins/app_classes.json");
+        auto traitEntryJSON = getJSONData.LoadJSON("Data/SKSE/Plugins/app_traits.json");
+
+        if (settingsHandler->MAG_ClassTracker) {
+            int                classTracker = static_cast<int>(settingsHandler->MAG_ClassTracker->value);
+            if (classTracker > 0) {
+                std::ostringstream previousClassSS;
+                previousClassSS << "CLASS" << std::setw(3) << std::setfill('0') << classTracker;
+
+                defaultClassCallback = previousClassSS.str();
+                defaultClass         = classEntryJSON[classTracker - 1]["Name"];
+            }
+        }
+
+        if (settingsHandler->MAG_TraitTracker) {
+            int                traitTracker = static_cast<int>(settingsHandler->MAG_TraitTracker->value);
+
+            if (traitTracker > 0) {
+                std::ostringstream previousTraitSS;
+                previousTraitSS << "TRAIT" << std::setw(3) << std::setfill('0') << traitTracker;
+
+                defaultTraitCallback = previousTraitSS.str();
+                defaultTrait         = traitEntryJSON[traitTracker - 1]["Name"];
+            }
+            
         }
     }
 
@@ -528,6 +568,8 @@ namespace RaceMenuHandler
     void OnItemPressHandler::UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText)
     {
         const auto raceMenuInjector = RaceMenuHandler::RaceMenu::GetSingleton();
+        const auto       dataHandler      = RE::TESDataHandler::GetSingleton();
+        const auto settingsHandler  = Settings::GetSingleton();
 
         if (!classText.empty()) {
             Utils::AddStringMember(&classValue, classText.c_str(), "text");
@@ -538,6 +580,7 @@ namespace RaceMenuHandler
             Utils::AddStringMember(&traitValue, traitText.c_str(), "text");
             logger::info("Updated Trait display to: {}", traitText);
         }
+
     }
 
     /* Install SelectionChange handler */
@@ -616,6 +659,63 @@ namespace RaceMenuHandler
                 argsShow[0].SetBoolean(true);
                 raceSexPanelsInstance.Invoke("ShowRaceDescription", &result, argsShow, 1);
             }
+        }
+    }
+
+    void GetTESGlobal::Call(Params& a_params)
+    {
+        assert(a_params.argCount >= 1);
+
+        const auto     settingsHandler = Settings::GetSingleton();
+
+        std::string_view input  = a_params.args[0].GetString();
+        RE::GFxValue* retVal = a_params.retVal;
+        RE::GFxMovie* movie  = a_params.movie;
+
+
+        if (input == "CLASS" && settingsHandler->MAG_ClassTracker) {
+            logger::info("ClassTracker {}", settingsHandler->MAG_ClassTracker->value);
+            retVal->SetNumber(settingsHandler->MAG_ClassTracker->value);
+        }
+
+        if (input == "TRAIT" && settingsHandler->MAG_TraitTracker) {
+            logger::info("TraitTracker {}", settingsHandler->MAG_TraitTracker->value);
+            retVal->SetNumber(settingsHandler->MAG_TraitTracker->value);
+        }
+    }
+
+    /* Install Scaleform Callback*/
+    bool InstallGetTESGlobal(RE::GFxMovieView* a_view, RE::GFxValue*)
+    {
+        RE::GFxValue globals;
+        std::string  swfName = a_view->GetMovieDef()->GetFileURL();
+
+        bool result = a_view->GetVariable(&globals, "_global");
+        if (result && swfName == "Interface/RaceSex_menu.swf") {
+            RE::GFxValue LAM;
+            if (!globals.GetMember("LAM", &LAM)) {
+                a_view->CreateObject(&LAM);
+            }
+
+            RE::GFxValue fnValue;
+
+            static GetTESGlobal* getTESGlobal = new GetTESGlobal;
+
+            a_view->CreateFunction(&fnValue, getTESGlobal);
+            LAM.SetMember("GetTESGlobal", fnValue);
+
+            globals.SetMember("LAM", LAM);
+            logger::info("TESGlobal Getter installed.");
+            return true;
+        }
+        return false;
+    }
+
+    /* Register loader in Scaleform interface*/
+    void RegisterGetTESGlobal()
+    {
+        if (const auto scaleform{ SKSE::GetScaleformInterface() }) {
+            scaleform->Register(InstallGetTESGlobal, "LAM2");
         }
     }
 } // namespace RaceMenuHandler
