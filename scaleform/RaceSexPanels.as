@@ -45,6 +45,8 @@ class RaceSexPanels extends MovieClip
 	var traitCallback:String;
 	var classArray:Array;
 	var traitArray:Array;
+	var defaultClass:Number;
+	var defaultTrait:Number;
 
 	function RaceSexPanels()
 	{
@@ -196,11 +198,23 @@ class RaceSexPanels extends MovieClip
 		{
 			classArray = _global.LAM.GetJSONData("Data/SKSE/Plugins/app_classes.json");
 			classArray.sortOn("Name",Array.DESCENDING);
+			defaultClass = classArray.length - _global.LAM.GetTESGlobal("CLASS");
+
+			skse.Log(defaultClass.toString())
+			skse.Log(classArray[defaultClass].Name)
+			PlayerClass.SetText(classArray[defaultClass].Name);
+			classCallback = classArray[defaultClass].UniqueKey;
 		}
 		if (bUseTraits)
 		{
 			traitArray = _global.LAM.GetJSONData("Data/SKSE/Plugins/app_traits.json");
 			traitArray.sortOn("Name",Array.DESCENDING);
+			defaultTrait = traitArray.length - _global.LAM.GetTESGlobal("TRAIT");
+
+			skse.Log(defaultTrait.toString())
+			skse.Log(traitArray[defaultTrait].Name)
+			PlayerTrait.SetText(traitArray[defaultTrait].Name);
+			traitCallback = traitArray[defaultTrait].UniqueKey;
 		}
 	}
 

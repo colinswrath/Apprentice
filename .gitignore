@@ -12,3 +12,10 @@ vs*/
 # files
 *.zip
 compile_commands.json
+
+# scaleform
+scaleform/bin/textentry.swf
+scaleform/bin/gfxfontlib.swf
+scaleform/bin/Inventory\ Components/
+scaleform/bin/.skyrimui
+scaleform/bin/racesex_menu.swd

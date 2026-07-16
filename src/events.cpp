@@ -1,6 +1,7 @@
 #include "events.h"
 #include "interface.h"
 #include "racemenu.h"
+#include "settings.h"
 
 namespace Events
 {
@@ -33,6 +34,9 @@ namespace Events
                 if (auto a_movie{ menu->uiMovie.get() }) {
                     a_movie->Invoke("_root.RaceSexMenuBaseInstance.RaceSexPanelsInstance.InitData", nullptr, nullptr, 0);
 
+                    const auto settingsHandler = Settings::GetSingleton();
+                    settingsHandler->LoadForms();
+
                     if (raceMenuHandler->Install()) {
                         bIsRaceMenu = true;
                         logger::info("Succesfully installed RaceMenu integration.");
@@ -45,7 +49,7 @@ namespace Events
         }
         else {
             if (bIsRaceMenu) {
-                raceMenuHandler->SendClassTraitModEvents();
+                raceMenuHandler->SendModEvents();
             }
         }
 

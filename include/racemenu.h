@@ -42,7 +42,7 @@ namespace RaceMenuHandler
 
         bool Install();
 
-        bool PopulateRaceList(RE::GPtr<RE::GFxMovieView>);
+        bool PopulateEntryList(RE::GPtr<RE::GFxMovieView>);
         bool PopulateCategoryList(RE::GPtr<RE::GFxMovieView>);
 
         bool ReplaceEntryPressHandler(RE::GPtr<RE::GFxMovieView>);
@@ -50,8 +50,9 @@ namespace RaceMenuHandler
 
         RE::GFxValue BuildCategoryEntry(RE::GFxValue*, i32, i32, std::string, i32, i32);
         RE::GFxValue BuildListEntry(RE::GFxValue*, i32, std::string, i32, std::string, i32, i32, std::string, bool, bool);
-        bool         CreateClassTraitUIElements(RE::GPtr<RE::GFxMovieView>);
-        void         SendClassTraitModEvents();
+        bool         CreateUIElements(RE::GPtr<RE::GFxMovieView>);
+        void         SendModEvents();
+        void         SetDefaultSelections();
 
     private:
     };
@@ -86,7 +87,6 @@ namespace RaceMenuHandler
 
         void Install();
         void Call(Params& a_params) override;
-        void SendClassTraitModEvents();
         void UpdateClassTraitDisplay(const std::string& classText, const std::string& traitText);
         void Reset();
     };
@@ -111,4 +111,13 @@ namespace RaceMenuHandler
         void Call(Params& a_params) override;
         void Reset();
     };
+
+    class GetTESGlobal : public RE::GFxFunctionHandler
+    {
+    public:
+        void Call(Params& a_params) override;
+    };
+
+    bool InstallGetTESGlobal(RE::GFxMovieView*, RE::GFxValue*);
+    void RegisterGetTESGlobal();
 } // namespace RaceMenuHandler
